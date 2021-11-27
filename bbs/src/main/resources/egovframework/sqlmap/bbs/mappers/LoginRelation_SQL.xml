@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.bbs.web.service.impl.BBS_Mapper">
+	
+	<select id="selectUser" parameterType="LoginCheckVO" resultType="egovMap">
+		SELECT* 
+		FROM user 
+		WHERE USER_EMAIL= '${userEmail}' AND USER_PASSWORD= '${userPassword}'
+	</select>
+	<select id="selectUserList" resultType="egovMap">
+		SELECT* 
+		FROM user
+	</select>
+	
+	<select id="selectSameID" resultType="egovMap" parameterType="String">
+		SELECT* 
+		FROM user
+		where user_email = #{_parameter}
+	</select>
+	
+
+	
+	<select id="selectBBSID" resultType="egovMap">
+		SELECT bbsID
+		FROM bbs 
+		order by bbsID DESC LIMIT 1
+	</select>
+	
+	<select id="selectBBSList" resultType="egovMap">
+		SELECT bbsID, bbsTitle, userEmail, DATE_FORMAT(bbs.bbsDate, '%Y-%m-%d %H:%i:%s')) bbsDate
+		FROM bbs order by bbsID desc
+	</select>
+	
+	<insert id="insertUser" parameterType="egovframework.bbs.Entity.User">
+		INSERT INTO user(user_email, user_password, user_name, user_gender)
+		VALUES (#{userEmail},#{userPassword},#{userName},#{userGender});
+	</insert>
+	
+	<insert id="insertBBS" parameterType="egovframework.bbs.Entity.BBS">
+		INSERT INTO bbs(bbsID, bbsTitle, userEmail, bbsDate, bbsContent, bbsAvailable,isLocked, lockPassword)
+		VALUES (#{bbsID},#{bbsTitle},#{userEmail},NOW(),#{bbsContent}, 1, #{isLocked}, #{lockPassword});
+	</insert>
+	
+	<select id="selectPageNumberOfBBSList" resultType="egovMap" parameterType="Integer">
+		SELECT bbsID, bbsTitle, userEmail, DATE_FORMAT(bbs.bbsDate, '%Y-%m-%d %H:%i:%s') bbsDate, 
+		bbsAvailable, isLocked, lockPassword
+		FROM bbs
+		where bbsID <![CDATA[<=]]> ((SELECT bbsID FROM bbs order by bbsID desc LIMIT 1 ) - #{_num}*10)
+		order by bbsID DESC LIMIT 10  
+	</select>
+	
+	<select id="selectBBS" resultType="egovMap" parameterType="Integer">
+		SELECT bbsID, bbsTitle, userEmail, DATE_FORMAT(bbs.bbsDate, '%Y-%m-%d %H:%i:%s') bbsDate, bbsContent, bbsAvailable,
+		 isLocked, lockPassword, likeNum, unLikeNum
+		FROM bbs 
+		where bbsID = #{_num}
+	</select>
+	
+	<update id="deleteBBS" parameterType="Integer">
+		UPDATE bbs SET bbs.bbsAvailable  = 0 
+		WHERE bbs.bbsID = #{_num}
+	</update>
+	
+	<update id="updateBBS" parameterType="egovframework.bbs.Entity.BBS">
+		UPDATE bbs 
+		SET bbs.bbsTitle = #{bbsTitle},
+		bbs.bbsContent   = #{bbsContent},
+		bbs.lockPassword = #{lockPassword},
+		bbs.isLocked 	 = #{isLocked}
+		WHERE bbs.bbsID = #{bbsID}
+	</update>
+	
+	<select id="selectRankManyWriteBBSList" resultType="egovMap">
+		SELECT FORMAT((@rownumber:= @rownumber + 1), 0) num, T.userEmail, T.cnt
+		FROM(
+			SELECT bbs.userEmail, COUNT(bbs.userEmail) cnt 
+			FROM bbs where bbs.bbsAvailable = 1  
+			GROUP BY bbs.userEmail ORDER BY cnt DESC
+			) T, (SELECT @rownumber := 0) rownumber  LIMIT 10
+	</select>
+	
+	<select id="selectRankLikeBBSList" resultType="egovMap">
+			SELECT FORMAT((@rownumber:= @rownumber + 1), 0) num, userEmail ,likeNum
+			FROM bbs, (SELECT @rownumber := 0) rownumber
+			WHERE bbs.bbsAvailable = 1 ORDER BY bbs.likeNum DESC LIMIT 10
+	</select>
+
+	<select id="selectCheckLikeOrUnlike" resultType="egovMap" parameterType="egovframework.bbs.Entity.BBS">
+		SELECT *
+		FROM likeAndUnLike 
+		where USER_EMAIL = #{userEmail} and
+		bbsID = #{bbsID}
+	</select>
+	
+	<select id="selectCheckAndisLike" resultType="egovMap" parameterType="egovframework.bbs.Entity.BBS">
+		SELECT lau.isLiked, cl.ischecked
+		FROM likeAndUnLike lau, check_like cl
+		WHERE lau.bbsID = #{bbsID} AND lau.USER_EMAIL = #{userEmail} AND
+		lau.USER_EMAIL = cl.USER_EMAIL AND lau.bbsID  = cl.bbsID
+	</select>
+	
+	<insert id="insertCheck" parameterType="egovframework.bbs.Entity.BBS">
+		INSERT INTO check_like(bbsID, USER_EMAIL, isChecked)
+		VALUES( #{bbsID},#{userEmail},1);
+	</insert>
+	
+	<insert id="insertLikeAndUnlike" parameterType="egovframework.bbs.Entity.BBS">
+		INSERT INTO likeAndUnLike(bbsID, USER_EMAIL, isLiked)
+		VALUES( #{bbsID},#{userEmail},#{isLiked});
+	</insert>
+	
+	<update id="updateCheck" parameterType="egovframework.bbs.Entity.BBS">
+		UPDATE check_like SET isChecked  =  #{isChecked}
+		WHERE bbsID = #{bbsID} and
+		USER_EMAIL = #{userEmail}
+	</update>
+	
+	<update id="updateLikeAndUnlike" parameterType="egovframework.bbs.Entity.BBS">
+		UPDATE likeAndUnLike SET isLiked =  #{isLiked}
+		WHERE bbsID = #{bbsID} and
+		USER_EMAIL = #{userEmail}
+	</update>
+	
+	<update id="updateLike" parameterType="egovframework.bbs.Entity.BBS">
+		UPDATE bbs SET likeNum =  likeNum + #{isLiked}
+		WHERE bbsID = #{bbsID}
+	</update>
+	
+	<update id="updateUnlike" parameterType="egovframework.bbs.Entity.BBS">
+		UPDATE bbs SET unLikeNum =  unLikeNum + #{isLiked}
+		WHERE bbsID = #{bbsID}
+	</update>
+</mapper>

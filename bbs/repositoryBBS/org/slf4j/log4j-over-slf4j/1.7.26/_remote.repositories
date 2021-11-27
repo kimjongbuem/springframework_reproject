@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Wed Apr 07 15:11:19 KST 2021
+log4j-over-slf4j-1.7.26.pom>mvn2s=
+log4j-over-slf4j-1.7.26.jar>mvn2s=
+log4j-over-slf4j-1.7.26-sources.jar>mvn2s=

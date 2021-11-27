@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.menu.service.impl.MenuMapper">
+	<select id="selectMenuCategoryPointList" resultType="egovMap">
+		SELECT MENU_CAT_CD, MENU_CAT_NM
+		FROM t_menu_category
+	</select>
+	
+	<select id="selectMenuDtlList" parameterType="String" resultType="egovMap">
+			SELECT menu_cd, menu_nm
+			FROM t_menu
+			<where>
+				menu_cat_cd = #{_parameter}
+			</where>
+	</select>
+	
+
+</mapper>
